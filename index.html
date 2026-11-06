@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 کینگ گیم | دیتاسنتر سه‌بعدی و پورتال گیمینگ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN for 3D Tunnel Graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#030712',
+                        cardBg: 'rgba(15, 23, 42, 0.88)',
+                        cardBorder: 'rgba(56, 189, 248, 0.35)',
+                        neonCyan: '#38bdf8',
+                        neonPurple: '#818cf8',
+                        neonBlue: '#2563eb'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #030712;
+            color: #f8fafc;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.light-mode {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        /* Glassmorphism Styles - Dark */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        .glass-btn {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #e2e8f0;
+        }
+
+        .glass-btn:hover {
+            border-color: #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            transform: translateY(-2px);
+            color: #ffffff;
+        }
+
+        /* Glassmorphism Styles - Light Mode */
+        body.light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(14, 165, 233, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+            color: #0f172a;
+        }
+
+        body.light-mode .glass-btn {
+            background: rgba(241, 245, 249, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            color: #1e293b;
+        }
+
+        body.light-mode .glass-btn:hover {
+            border-color: #0284c7;
+            box-shadow: 0 0 15px rgba(2, 132, 199, 0.3);
+            color: #0284c7;
+        }
+
+        .glass-btn-active {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            border: 1px solid #38bdf8;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.7);
+            color: #ffffff !important;
+        }
+
+        /* 3D Glow Effects */
+        .neon-title {
+            font-weight: 900;
+            letter-spacing: -1px;
+            background: linear-gradient(180deg, #ffffff 0%, #38bdf8 55%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.85));
+        }
+
+        body.light-mode .neon-title {
+            background: linear-gradient(180deg, #0f172a 0%, #0284c7 55%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(2, 132, 199, 0.3));
+        }
+
+        .mr-logo-box {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(129, 140, 248, 0.15) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+        }
+
+        /* Fullscreen Canvas Container */
+        #datacenter-canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+    </style>
+</head>
+<body class="relative flex flex-col justify-between min-h-screen w-screen overflow-hidden selection:bg-neonCyan selection:text-black">
+
+    <!-- Full viewport 3D Canvas Tunnel -->
+    <div id="datacenter-canvas-container"></div>
+
+    <!-- HEADER NAVIGATION -->
+    <header class="relative z-30 w-full px-4 lg:px-8 py-3 flex items-center justify-between pointer-events-none">
+        
+        <!-- Left Tools Bar -->
+        <div class="flex items-center gap-2.5 pointer-events-auto">
+            <button onclick="switchView('home')" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-house text-neonCyan"></i>
+                <span class="hidden sm:inline">نمای اصلی</span>
+            </button>
+
+            <!-- Color Theme Switch Button (Black / White) -->
+            <button onclick="toggleTheme()" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2" title="تغییر تم رنگی">
+                <i id="theme-icon" class="fa-solid fa-sun text-amber-400"></i>
+                <span id="theme-text" class="hidden sm:inline">حالت روشن</span>
+            </button>
+
+            <button onclick="toggleQuality()" class="glass-btn px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                <i class="fa-solid fa-sliders text-neonPurple"></i>
+                <span id="quality-label" class="hidden sm:inline">کیفیت: بالا</span>
+            </button>
+        </div>
+
+        <!-- Center Nav Tabs -->
+        <div class="glass-panel px-2 py-1.5 rounded-2xl flex items-center gap-1 pointer-events-auto overflow-x-auto max-w-[55vw]">
+            <button id="nav-btn-home" onclick="switchView('home')" class="glass-btn-active px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                🏠 خانه
+            </button>
+            <button id="nav-btn-games" onclick="switchView('games')" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                🎮 دانلود بازی
+            </button>
+            <button id="nav-btn-servers" onclick="switchView('servers')" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                🖥️ سرورها
+            </button>
+            <button id="nav-btn-tutorials" onclick="switchView('tutorials')" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                🎓 آموزش‌ها
+            </button>
+            <button id="nav-btn-news" onclick="switchView('news')" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                📰 اخبار
+            </button>
+        </div>
+
+        <!-- Right User Dashboard & Logo Button -->
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <button onclick="switchView('dashboard')" id="nav-btn-dashboard" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold text-neonCyan border-neonCyan/50 flex items-center gap-2 hover:bg-neonCyan hover:text-black transition">
+                <i class="fa-solid fa-user-gear text-sm"></i>
+                <span class="hidden sm:inline">پنل کاربری</span>
+            </button>
+
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchView('home')">
+                <div class="hidden lg:flex flex-col text-left leading-tight">
+                    <span class="text-base font-black tracking-wide">Kingame</span>
+                    <span class="text-[9px] text-neonCyan font-bold tracking-widest">KINGAME PORTAL</span>
+                </div>
+                <div class="mr-logo-box w-10 h-10 rounded-xl flex items-center justify-center text-neonCyan text-lg">
+                    <i class="fa-solid fa-server"></i>
+                </div>
+            </div>
+        </div>
+
+    </header>
+
+    <!-- CONTENT OVERLAYS -->
+    <main class="relative z-20 flex-grow flex items-center justify-center w-full max-w-7xl mx-auto px-4 py-2 overflow-hidden pointer-events-none">
+        
+        <!-- HOME OVERLAY -->
+        <div id="view-home" class="page-view text-center pointer-events-none space-y-4 my-auto">
+            <h1 class="neon-title text-6xl md:text-8xl font-black mb-2 tracking-tight">
+                کــینگ گیم
+            </h1>
+            <div class="inline-flex items-center gap-2 px-6 py-2 rounded-full glass-panel border border-neonCyan/30 mb-2 pointer-events-auto">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <p class="text-sm md:text-base font-bold">
+                    پورتال تخصصی گیمینگ، دانلود بازی و <span class="text-neonCyan font-black">سرورهای اختصاصی</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- GAMES OVERLAY -->
+        <div id="view-games" class="page-view hidden w-full h-full max-h-[75vh] glass-panel p-6 rounded-3xl overflow-y-auto pointer-events-auto space-y-6">
+            <div class="flex justify-between items-center border-b border-cardBorder pb-4">
+                <h2 class="text-2xl font-black text-neonCyan flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad"></i> دانلود بازی‌ها
+                </h2>
+                <span class="text-xs opacity-75">برای دانلود و مشاهده پارت‌ها کلیک کنید</span>
+            </div>
+            <div id="games-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- GAME DETAILS OVERLAY -->
+        <div id="view-game-details" class="page-view hidden w-full h-full max-h-[75vh] glass-panel p-6 lg:p-8 rounded-3xl overflow-y-auto pointer-events-auto space-y-6">
+            <button onclick="switchView('games')" class="glass-btn px-4 py-2 rounded-xl font-bold hover:text-neonCyan transition">
+                ← بازگشت به لیست بازی‌ها
+            </button>
+            <div id="game-detail-wrapper" class="space-y-6"></div>
+        </div>
+
+        <!-- SERVERS OVERLAY -->
+        <div id="view-servers" class="page-view hidden w-full h-full max-h-[75vh] glass-panel p-6 rounded-3xl overflow-y-auto pointer-events-auto space-y-6">
+            <h2 class="text-2xl font-black text-neonCyan border-b border-cardBorder pb-4 flex items-center gap-2">
+                <i class="fa-solid fa-server"></i> سرورهای آنلاین
+            </h2>
+            <div class="rounded-2xl overflow-hidden border border-cardBorder">
+                <table class="w-full text-right text-sm">
+                    <thead>
+                        <tr class="bg-slate-900/90 text-neonCyan">
+                            <th class="p-4">نام سرور</th>
+                            <th class="p-4">بازی</th>
+                            <th class="p-4">IP سرور</th>
+                            <th class="p-4">تعداد بازیکنان</th>
+                            <th class="p-4">وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servers-list-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TUTORIALS OVERLAY -->
+        <div id="view-tutorials" class="page-view hidden w-full h-full max-h-[75vh] glass-panel p-6 rounded-3xl overflow-y-auto pointer-events-auto space-y-6">
+            <h2 class="text-2xl font-black text-neonCyan border-b border-cardBorder pb-4 flex items-center gap-2">
+                <i class="fa-solid fa-graduation-cap"></i> آموزش‌ها
+            </h2>
+            <div id="tutorials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+
+        <!-- TUTORIAL DETAILS OVERLAY -->
+        <div id="view-tutorial-details" class="page-view hidden w-full h-full max-h-[75vh] glass-panel p-6 lg:p-8 rounded-3xl overflow-y-auto pointer-events-auto space-y-6">
+            <button onclick="switchView('tutorials')" class="glass-btn px-4 py-2 rounded-xl font-bold hover:text-neonCyan transition">
+                ← بازگشت به آموزش‌ها
+            </button>
+            <div id="tutorial-detail-wrapper" class="space-y-6"></div>
+        </div>
+
+        <!-- NEWS OVERLAY -->
+        <div id="view-news" class="page-view hidden w-full h-full max-h-[75vh] glass-panel p-6 rounded-3xl overflow-y-auto pointer-events-auto space-y-6">
+            <h2 class="text-2xl font-black text-neonCyan border-b border-cardBorder pb-4 flex items-center gap-2">
+                <i class="fa-solid fa-newspaper"></i> اخبار و اطلاعیه‌ها
+            </h2>
+            <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+
+        <!-- NEWS DETAILS OVERLAY -->
+        <div id="view-news-details" class="page-view hidden w-full h-full max-h-[75vh] glass-panel p-6 lg:p-8 rounded-3xl overflow-y-auto pointer-events-auto space-y-6">
+            <button onclick="switchView('news')" class="glass-btn px-4 py-2 rounded-xl font-bold hover:text-neonCyan transition">
+                ← بازگشت به اخبار
+            </button>
+            <div id="news-detail-wrapper" class="space-y-6"></div>
+        </div>
+
+        <!-- INTEGRATED USER DASHBOARD (PANEL KARBARI WITH PASSWORD PROTECTION) -->
+        <div id="view-dashboard" class="page-view hidden w-full h-full max-h-[78vh] glass-panel p-6 rounded-3xl overflow-y-auto pointer-events-auto space-y-6">
+            
+            <!-- LOGIN LOCK FORM -->
+            <div id="dash-login-lock" class="max-w-md mx-auto my-auto p-8 glass-panel rounded-3xl text-center space-y-6 my-10">
+                <div class="w-16 h-16 rounded-2xl bg-neonCyan/20 text-neonCyan flex items-center justify-center text-3xl mx-auto border border-neonCyan/40 shadow-[0_0_20px_rgba(56,189,248,0.3)]">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-neonCyan">ورود به پنل مدیریت</h3>
+                    <p class="text-xs opacity-75 mt-1">جهت مدیریت محتوای سایت اطلاعات را وارد کنید</p>
+                </div>
+                <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                    <input type="text" id="admin-user" placeholder="نام کاربری (12345)" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs text-center focus:outline-none focus:border-neonCyan">
+                    <input type="password" id="admin-pass" placeholder="رمز عبور (12345)" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs text-center focus:outline-none focus:border-neonCyan">
+                    <button type="submit" class="w-full bg-neonCyan text-black py-3 rounded-xl font-bold text-xs hover:shadow-[0_0_15px_rgba(56,189,248,0.5)] transition">ورود به پنل</button>
+                </form>
+            </div>
+
+            <!-- DASHBOARD CONTENT (VISIBLE AFTER LOGIN) -->
+            <div id="dash-unlocked-content" class="hidden space-y-6">
+                <div class="flex justify-between items-center border-b border-cardBorder pb-4">
+                    <h2 class="text-2xl font-black text-neonCyan flex items-center gap-2">
+                        <i class="fa-solid fa-user-gear"></i> پنل کاربری و مدیریت محتوا
+                    </h2>
+                    <button onclick="handleAdminLogout()" class="glass-btn px-4 py-1.5 rounded-xl text-xs font-bold text-red-400 border-red-500/40 hover:bg-red-500/20">
+                        🔒 خروج از حساب
+                    </button>
+                </div>
+
+                <!-- Sub Tabs in Dashboard -->
+                <div class="flex flex-wrap gap-2 border-b border-cardBorder/50 pb-3">
+                    <button onclick="switchDashTab('games', this)" class="dash-tab-btn glass-btn-active px-4 py-2 rounded-xl text-xs font-bold">🎮 مدیریت بازی‌ها</button>
+                    <button onclick="switchDashTab('servers', this)" class="dash-tab-btn glass-btn px-4 py-2 rounded-xl text-xs font-bold">🖥️ مدیریت سرورها</button>
+                    <button onclick="switchDashTab('tutorials', this)" class="dash-tab-btn glass-btn px-4 py-2 rounded-xl text-xs font-bold">🎓 مدیریت آموزش‌ها</button>
+                    <button onclick="switchDashTab('news', this)" class="dash-tab-btn glass-btn px-4 py-2 rounded-xl text-xs font-bold">📰 مدیریت اخبار</button>
+                </div>
+
+                <!-- Dash Sub-Tab: Games Management -->
+                <div id="dash-sec-games" class="dash-sec space-y-6">
+                    <form id="game-form" class="glass-panel p-6 rounded-2xl space-y-4 max-w-3xl">
+                        <h3 class="font-bold text-neonCyan text-sm">افزودن بازی جدید</h3>
+                        <input type="text" id="g-title" placeholder="عنوان کامل بازی" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs focus:outline-none focus:border-neonCyan">
+                        <input type="text" id="g-size" placeholder="حجم کلی (مثال: 4.5 GB)" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs focus:outline-none focus:border-neonCyan">
+                        <div>
+                            <label class="text-xs opacity-75 block mb-1">کاور بازی:</label>
+                            <input type="file" id="g-file" accept="image/*" onchange="handleImgPreview(this, 'g-prev', 'game')" class="w-full bg-slate-900/80 border border-cardBorder p-2 rounded-xl text-xs">
+                            <img id="g-prev" class="max-w-[200px] mt-2 rounded-lg hidden border border-cardBorder">
+                        </div>
+                        <div>
+                            <label class="text-xs opacity-75 block mb-1">ویدیو پیش‌نمایش (اختیاری):</label>
+                            <input type="file" id="g-video-file" accept="video/mp4" onchange="handleVideoPreview(this, 'g-video-prev')" class="w-full bg-slate-900/80 border border-cardBorder p-2 rounded-xl text-xs">
+                            <video id="g-video-prev" class="max-w-[250px] mt-2 rounded-lg hidden border border-cardBorder" controls></video>
+                        </div>
+                        <textarea id="g-desc" placeholder="توضیحات معرفی" rows="3" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs focus:outline-none focus:border-neonCyan"></textarea>
+                        <textarea id="g-sysreq" placeholder="سیستم مورد نیاز" rows="2" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs focus:outline-none focus:border-neonCyan"></textarea>
+                        <textarea id="g-install" placeholder="راهنمای نصب" rows="2" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs focus:outline-none focus:border-neonCyan"></textarea>
+
+                        <div class="space-y-4 bg-slate-950/60 p-4 rounded-2xl border border-cardBorder">
+                            <label class="text-xs font-bold text-neonCyan block">📦 نسخه‌ها و پارت‌های دانلود</label>
+                            <div id="versions-input-list" class="space-y-4">
+                                <div class="version-box bg-slate-900/80 border border-cardBorder p-4 rounded-xl space-y-3">
+                                    <input type="text" class="ver-title w-full bg-slate-950 border border-cardBorder p-2.5 rounded-xl text-xs" placeholder="نام نسخه (مثال: نسخه اصلی V34)" required>
+                                    <div class="ver-parts-container space-y-2 pl-2 border-r-2 border-neonCyan/40">
+                                        <div class="part-row flex gap-2">
+                                            <input type="text" class="part-name w-1/3 bg-slate-950 border border-cardBorder p-2 rounded-xl text-xs" placeholder="عنوان پارت" required>
+                                            <input type="url" class="part-link flex-grow bg-slate-950 border border-cardBorder p-2 rounded-xl text-xs" placeholder="لینک دانلود" required>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="addPartToVersion(this)" class="bg-cardBorder text-neonCyan px-3 py-1 rounded-lg text-xs font-bold">+ افزودن پارت به این نسخه</button>
+                                </div>
+                            </div>
+                            <button type="button" onclick="addVersionRow()" class="w-full bg-neonCyan/10 text-neonCyan border border-neonCyan/40 py-2 rounded-xl text-xs font-bold">+ افزودن نسخه جدید</button>
+                        </div>
+                        <button type="submit" class="w-full bg-neonCyan text-black py-3 rounded-xl font-bold text-xs">🚀 ثبت و انتشار بازی در پورتال</button>
+                    </form>
+
+                    <div class="glass-panel p-6 rounded-2xl space-y-4 max-w-3xl">
+                        <h3 class="font-bold text-neonCyan border-b border-cardBorder pb-2 text-sm">🗑️ لیست و حذف بازی‌های موجود</h3>
+                        <div id="tbl-games" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Dash Sub-Tab: Servers -->
+                <div id="dash-sec-servers" class="dash-sec hidden space-y-6">
+                    <form id="server-form" class="glass-panel p-6 rounded-2xl space-y-4 max-w-2xl">
+                        <h3 class="font-bold text-neonCyan text-sm">افزودن سرور جدید</h3>
+                        <input type="text" id="s-name" placeholder="نام سرور" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs">
+                        <input type="text" id="s-game" placeholder="عنوان بازی" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs">
+                        <input type="text" id="s-ip" placeholder="آدرس IP و پورت" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs">
+                        <input type="text" id="s-players" placeholder="تعداد بازیکنان (مثال: 24/32)" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs">
+                        <button type="submit" class="w-full bg-neonCyan text-black py-3 rounded-xl font-bold text-xs">ثبت سرور</button>
+                    </form>
+                    <div class="glass-panel p-6 rounded-2xl space-y-4 max-w-2xl"><h3 class="font-bold text-neonCyan border-b border-cardBorder pb-2 text-sm">🗑️ لیست سرورها</h3><div id="tbl-servers" class="space-y-2"></div></div>
+                </div>
+
+                <!-- Dash Sub-Tab: Tutorials (With File Upload Support) -->
+                <div id="dash-sec-tutorials" class="dash-sec hidden space-y-6">
+                    <form id="tutorial-form" class="glass-panel p-6 rounded-2xl space-y-4 max-w-2xl">
+                        <h3 class="font-bold text-neonCyan text-sm">افزودن آموزش جدید</h3>
+                        <input type="text" id="t-title" placeholder="عنوان آموزش" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs">
+                        
+                        <div>
+                            <label class="text-xs opacity-75 block mb-1">🎥 ویدیو آموزش (انتخاب فایل MP4 از سیستم):</label>
+                            <input type="file" id="t-video-file" accept="video/mp4" onchange="handleTutorialVideoUpload(this)" class="w-full bg-slate-900/80 border border-cardBorder p-2 rounded-xl text-xs">
+                            <video id="t-video-prev" class="max-w-[300px] mt-2 rounded-lg hidden border border-cardBorder" controls></video>
+                        </div>
+
+                        <div class="text-center text-xs opacity-50 font-bold my-1">— یا —</div>
+
+                        <input type="text" id="t-video-link" placeholder="یا لینک مستقیم ویدیو آنلاین (MP4)" class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs">
+                        
+                        <textarea id="t-desc" placeholder="توضیحات آموزش" rows="3" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs"></textarea>
+                        <button type="submit" class="w-full bg-neonCyan text-black py-3 rounded-xl font-bold text-xs">انتشار آموزش</button>
+                    </form>
+                    <div class="glass-panel p-6 rounded-2xl space-y-4 max-w-2xl"><h3 class="font-bold text-neonCyan border-b border-cardBorder pb-2 text-sm">🗑️ لیست آموزش‌ها</h3><div id="tbl-tutorials" class="space-y-2"></div></div>
+                </div>
+
+                <!-- Dash Sub-Tab: News -->
+                <div id="dash-sec-news" class="dash-sec hidden space-y-6">
+                    <form id="news-form" class="glass-panel p-6 rounded-2xl space-y-4 max-w-2xl">
+                        <h3 class="font-bold text-neonCyan text-sm">افزودن خبر جدید</h3>
+                        <input type="text" id="n-title" placeholder="عنوان خبر" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs">
+                        <div><label class="text-xs opacity-75 block mb-1">تصویر خبر:</label><input type="file" id="n-file" accept="image/*" onchange="handleImgPreview(this, 'n-prev', 'news')" class="w-full bg-slate-900/80 border border-cardBorder p-2 rounded-xl text-xs"><img id="n-prev" class="max-w-[200px] mt-2 rounded-lg hidden border border-cardBorder"></div>
+                        <textarea id="n-body" placeholder="متن کامل خبر" rows="4" required class="w-full bg-slate-900/80 border border-cardBorder p-3 rounded-xl text-xs"></textarea>
+                        <button type="submit" class="w-full bg-neonCyan text-black py-3 rounded-xl font-bold text-xs">انتشار خبر</button>
+                    </form>
+                    <div class="glass-panel p-6 rounded-2xl space-y-4 max-w-2xl"><h3 class="font-bold text-neonCyan border-b border-cardBorder pb-2 text-sm">🗑️ لیست اخبار</h3><div id="tbl-news" class="space-y-2"></div></div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FOOTER & SOCIAL LINKS -->
+    <footer class="relative z-30 w-full px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-cardBorder/40 bg-slate-950/60 backdrop-blur-md pointer-events-auto">
+        <div class="flex items-center gap-3">
+            <span class="text-neonCyan font-black text-lg">👑 کــینگ گیم</span>
+            <span class="text-xs opacity-75">| مرجع سرورهای گیمینگ و خدمات دیتاسنتر</span>
+        </div>
+
+        <!-- Social Media Channel Links -->
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="https://rubika.ir" target="_blank" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold text-purple-400 border-purple-500/40 hover:bg-purple-600/20 flex items-center gap-2">
+                <i class="fa-solid fa-comments"></i>
+                <span>کانال روبیکا</span>
+            </a>
+             <a href="https://bale.ai" target="_blank" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-400 border-emerald-500/40 hover:bg-emerald-600/20 flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>کانال بله</span>
+            </a>
+            <a href="https://web.telegram.org" target="_blank" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold text-purple-400 border-purple-500/40 hover:bg-purple-600/20 flex items-center gap-2">
+                <i class="fa-solid fa-comments"></i>
+                <span>کانال تلگرام</span>
+            </a>
+            <a href="https://youtube.com" target="_blank" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 border-red-500/40 hover:bg-red-600/20 flex items-center gap-2">
+                <i class="fa-brands fa-youtube"></i>
+                <span>یوتیوب</span>
+            </a>
+            <a href="https://aparat.com" target="_blank" class="glass-btn px-3.5 py-2 rounded-xl text-xs font-bold text-pink-400 border-pink-500/40 hover:bg-pink-600/20 flex items-center gap-2">
+                <i class="fa-solid fa-play"></i>
+                <span>آپارات</span>
+            </a>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-panel px-6 py-3 rounded-2xl text-sm font-bold text-neonCyan shadow-2xl transition-all duration-500 opacity-0 -translate-y-10 pointer-events-none flex items-center gap-2">
+        <i class="fa-solid fa-circle-info"></i>
+        <span id="toast-text">اطلاعات</span>
+    </div>
+
+    <!-- THREE.JS 3D CYBERPUNK TUNNEL ENGINE & INTEGRATED DATA ENGINE -->
+    <script>
+        const ADMIN_USER = "Admin.1392";
+        const ADMIN_PASS = "Admin.1392";
+
+        let scene, camera, renderer;
+        let tunnelGroup, hologramCrown, lightParticles;
+        let mouseX = 0, mouseY = 0;
+        let targetX = 0, targetY = 0;
+        let isHighQuality = true;
+        let gameImageBase64 = "", gameVideoBase64 = "", newsImageBase64 = "", tutorialVideoBase64 = "";
+
+        const defaultData = {
+            games: [{
+                id: 1, 
+                title: "Counter-Strike 1.6 (Kingame Edition)", 
+                size: "320MB", 
+                image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&auto=format&fit=crop&q=60", 
+                video: "https://www.w3schools.com/html/mov_bbb.mp4",
+                desc: "نسخه بهینه‌شده با لود سریع و کانفیگ اختصاصی سرورها مناسب برای رقابت‌های آنلاین پینگی پایین.",
+                sysreq: "CPU: 1.2 GHz | RAM: 512 MB | VGA: 128 MB", 
+                install: "فایل دانلود شده را اکسترکت کنید و فایل Setup.exe را اجرا نمایید.",
+                versions: [
+                    { 
+                        title: "نسخه اصلی پابلیک (V34)", 
+                        parts: [
+                            { name: "پارت اصلی بازی", link: "#" },
+                            { name: "پک مپ‌های سرور", link: "#" }
+                        ] 
+                    }
+                ]
+            }],
+            servers: [
+                { id: 1, name: "Kingame Public #1", game: "CS 1.6", ip: "185.208.174.10:27015", players: "30/32", status: "آنلاین" }
+            ],
+            tutorials: [
+                { id: 1, title: "آموزش اتصال سریع به سرورهای کانتراستراک", video: "https://www.w3schools.com/html/mov_bbb.mp4", desc: "آموزش گام‌به‌گام وارد کردن IP سرور و رفع مشکل کانکت شدن." }
+            ],
+            news: [
+                { id: 1, title: "راه‌اندازی سیستم دیتاسنتر سه‌بعدی کینگ گیم", image: "", body: "رنکینگ سرورها و پورتال اختصاصی دیتاسنتر سه‌بعدی بروزرسانی شد." }
+            ]
+        };
+
+        function getStorage() {
+            try { 
+                const s = localStorage.getItem('kingame_master_db'); 
+                return s ? JSON.parse(s) : defaultData; 
+            } catch(e) { 
+                return defaultData; 
+            }
+        }
+
+        function setStorage(d) {
+            localStorage.setItem('kingame_master_db', JSON.stringify(d));
+        }
+
+        // Admin Auth Functions
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
+                sessionStorage.setItem('kingame_admin_logged', 'true');
+                checkAdminState();
+                showToast("ورود موفقیت‌آمیز به پنل مدیریت!");
+            } else {
+                alert("نام کاربری یا رمز عبور اشتباه است!");
+            }
+        }
+
+        function handleAdminLogout() {
+            sessionStorage.removeItem('kingame_admin_logged');
+            checkAdminState();
+            showToast("از حساب مدیریت خارج شدید.");
+        }
+
+        function checkAdminState() {
+            const isLogged = sessionStorage.getItem('kingame_admin_logged') === 'true';
+            document.getElementById('dash-login-lock').classList.toggle('hidden', isLogged);
+            document.getElementById('dash-unlocked-content').classList.toggle('hidden', !isLogged);
+        }
+
+        // Color Theme Switcher
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('light-mode');
+            const isLight = body.classList.contains('light-mode');
+
+            document.getElementById('theme-icon').className = isLight ? "fa-solid fa-moon text-indigo-600" : "fa-solid fa-sun text-amber-400";
+            document.getElementById('theme-text').innerText = isLight ? "حالت تاریک" : "حالت روشن";
+
+            if (scene) {
+                scene.fog.color.setHex(isLight ? 0xe2e8f0 : 0x030712);
+            }
+            showToast(isLight ? "حالت روشن فعال شد" : "حالت تاریک فعال شد");
+        }
+
+        // 3D Engine Setup
+        function init3DTunnel() {
+            const container = document.getElementById('datacenter-canvas-container');
+
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x030712, 0.035);
+
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 120);
+            camera.position.set(0, 0, 14);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0x0a101d, 2);
+            scene.add(ambientLight);
+
+            const tunnelNeonLight = new THREE.PointLight(0x38bdf8, 4, 30);
+            tunnelNeonLight.position.set(0, 0, -8);
+            scene.add(tunnelNeonLight);
+
+            buildTunnel();
+            buildEndHologram();
+            buildParticles();
+
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('mousemove', onMouseMove);
+
+            animate();
+        }
+
+        function buildTunnel() {
+            tunnelGroup = new THREE.Group();
+
+            const rackGeometry = new THREE.BoxGeometry(2, 6.5, 3);
+            const rackMaterial = new THREE.MeshStandardMaterial({
+                color: 0x080c14,
+                roughness: 0.25,
+                metalness: 0.85
+            });
+
+            const cyanGlowMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+            const blueGlowMat = new THREE.MeshBasicMaterial({ color: 0x2563eb });
+
+            const tunnelLength = 14;
+            const spacing = 3.5;
+
+            for (let i = 0; i < tunnelLength; i++) {
+                const zPos = -i * spacing + 10;
+
+                const leftRack = new THREE.Mesh(rackGeometry, rackMaterial);
+                leftRack.position.set(-3.5, 0, zPos);
+                tunnelGroup.add(leftRack);
+
+                const rightRack = new THREE.Mesh(rackGeometry, rackMaterial);
+                rightRack.position.set(3.5, 0, zPos);
+                tunnelGroup.add(rightRack);
+
+                for (let j = -2.8; j <= 2.8; j += 0.5) {
+                    const ledLeft = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.06, 0.08, 2.8),
+                        (Math.random() > 0.4) ? cyanGlowMat : blueGlowMat
+                    );
+                    ledLeft.position.set(-2.45, j, zPos);
+                    tunnelGroup.add(ledLeft);
+
+                    const ledRight = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.06, 0.08, 2.8),
+                        (Math.random() > 0.4) ? cyanGlowMat : blueGlowMat
+                    );
+                    ledRight.position.set(2.45, j, zPos);
+                    tunnelGroup.add(ledRight);
+                }
+
+                if (i % 2 === 0) {
+                    const arch = new THREE.Mesh(
+                        new THREE.TorusGeometry(3.6, 0.04, 16, 50, Math.PI),
+                        new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+                    );
+                    arch.position.set(0, 0, zPos);
+                    tunnelGroup.add(arch);
+                }
+            }
+
+            const gridHelper = new THREE.GridHelper(80, 50, 0x38bdf8, 0x1e293b);
+            gridHelper.position.y = -3.25;
+            tunnelGroup.add(gridHelper);
+
+            scene.add(tunnelGroup);
+        }
+
+        function buildEndHologram() {
+            const hologramGroup = new THREE.Group();
+
+            const ring1 = new THREE.Mesh(
+                new THREE.TorusGeometry(2, 0.03, 16, 100),
+                new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true })
+            );
+            hologramGroup.add(ring1);
+
+            const octaGeo = new THREE.OctahedronGeometry(0.9, 0);
+            hologramCrown = new THREE.Mesh(octaGeo, new THREE.MeshStandardMaterial({ color: 0x38bdf8, wireframe: true }));
+            hologramGroup.add(hologramCrown);
+
+            hologramGroup.position.set(0, 0, -12);
+            scene.add(hologramGroup);
+            scene.userData.hologramGroup = hologramGroup;
+        }
+
+        function buildParticles() {
+            const particleCount = 250;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 18;
+                positions[i + 1] = (Math.random() - 0.5) * 10;
+                positions[i + 2] = (Math.random() - 0.5) * 35;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            lightParticles = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.08, transparent: true }));
+            scene.add(lightParticles);
+        }
+
+        function onMouseMove(event) {
+            mouseX = (event.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+            mouseY = (event.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            targetX = mouseX * 1.2;
+            targetY = -mouseY * 0.7;
+
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (targetY - camera.position.y) * 0.05;
+            camera.lookAt(0, 0, -8);
+
+            if (scene.userData.hologramGroup) scene.userData.hologramGroup.rotation.y += 0.012;
+            if (lightParticles) {
+                lightParticles.position.z += 0.008;
+                if (lightParticles.position.z > 8) lightParticles.position.z = -15;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // VIEW NAVIGATION
+        function switchView(key) {
+            document.querySelectorAll('.page-view').forEach(v => v.classList.add('hidden'));
+            
+            const target = document.getElementById('view-' + key);
+            if (target) target.classList.remove('hidden');
+
+            const navBtns = ['home', 'games', 'servers', 'tutorials', 'news', 'dashboard'];
+            navBtns.forEach(b => {
+                const btnEl = document.getElementById('nav-btn-' + b);
+                if (btnEl) {
+                    btnEl.className = (b === key) ?
+                        "glass-btn-active px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap" :
+                        "glass-btn px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap";
+                }
+            });
+
+            if (key === 'dashboard') {
+                checkAdminState();
+            }
+
+            if (key === 'home') animateCamera(14);
+            else if (key === 'games' || key === 'game-details') animateCamera(8);
+            else if (key === 'servers') animateCamera(4);
+            else if (key === 'tutorials' || key === 'tutorial-details') animateCamera(0);
+            else if (key === 'news' || key === 'news-details' || key === 'dashboard') animateCamera(-4);
+        }
+
+        function animateCamera(targetZ) {
+            let startTime = performance.now();
+            let startZ = camera.position.z;
+            function step() {
+                let elapsed = performance.now() - startTime;
+                if (elapsed < 500) {
+                    camera.position.z = startZ + (targetZ - startZ) * (elapsed / 500);
+                    requestAnimationFrame(step);
+                } else {
+                    camera.position.z = targetZ;
+                }
+            }
+            step();
+        }
+
+        function switchDashTab(tabKey, btn) {
+            document.querySelectorAll('.dash-sec').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.dash-tab-btn').forEach(b => {
+                b.classList.remove('glass-btn-active');
+                b.classList.add('glass-btn');
+            });
+            document.getElementById('dash-sec-' + tabKey).classList.remove('hidden');
+            btn.classList.remove('glass-btn');
+            btn.classList.add('glass-btn-active');
+        }
+
+        function renderPortalContent() {
+            const db = getStorage();
+
+            // 1. Render Games
+            document.getElementById('games-grid').innerHTML = db.games.map(g => `
+                <div onclick="openGameDetails(${g.id})" class="glass-panel rounded-2xl overflow-hidden cursor-pointer border border-cardBorder hover:border-neonCyan transition duration-300 flex flex-col justify-between group">
+                    <div>
+                        <div class="h-44 bg-slate-900 overflow-hidden relative">
+                            <img src="${g.image || 'https://via.placeholder.com/400x300?text=Kingame+Cover'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <span class="absolute top-3 left-3 bg-black/80 backdrop-blur text-neonCyan text-xs px-2.5 py-1 rounded-lg border border-neonCyan/30">💾 ${g.size}</span>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <h3 class="font-bold text-base group-hover:text-neonCyan transition">${g.title}</h3>
+                            <p class="text-xs opacity-75 line-clamp-2 leading-relaxed">${g.desc}</p>
+                        </div>
+                    </div>
+                    <div class="p-4 pt-0">
+                        <span class="w-full bg-neonCyan/10 text-neonCyan border border-neonCyan/40 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2 group-hover:bg-neonCyan group-hover:text-black transition">
+                            <i class="fa-solid fa-download"></i> دانلود بازی و نسخه‌ها
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+
+            // 2. Render Servers
+            document.getElementById('servers-list-body').innerHTML = db.servers.map(s => `
+                <tr class="border-b border-cardBorder/50 hover:bg-slate-800/40 transition">
+                    <td class="p-4 font-bold flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ${s.name}</td>
+                    <td class="p-4 opacity-75">${s.game}</td>
+                    <td class="p-4 font-mono text-neonCyan text-xs">${s.ip}</td>
+                    <td class="p-4 opacity-75">${s.players}</td>
+                    <td class="p-4"><span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-xs font-bold">${s.status || 'آنلاین'}</span></td>
+                </tr>
+            `).join('');
+
+            // 3. Render Tutorials & News
+            document.getElementById('tutorials-grid').innerHTML = db.tutorials.map(t => `
+                <div onclick="openTutorialDetails(${t.id})" class="glass-panel p-5 rounded-2xl space-y-3 cursor-pointer hover:border-neonCyan transition">
+                    <div class="flex items-center gap-3 text-neonCyan">
+                        <i class="fa-solid fa-circle-play text-2xl"></i>
+                        <h3 class="font-bold text-base">${t.title}</h3>
+                    </div>
+                    <p class="text-xs opacity-75 leading-relaxed line-clamp-2">${t.desc}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('news-grid').innerHTML = db.news.map(n => `
+                <div onclick="openNewsDetails(${n.id})" class="glass-panel p-5 rounded-2xl space-y-3 cursor-pointer hover:border-neonCyan transition">
+                    <div class="flex items-center gap-3 text-neonPurple">
+                        <i class="fa-solid fa-bullhorn text-xl"></i>
+                        <h3 class="font-bold text-base">${n.title}</h3>
+                    </div>
+                    <p class="text-xs opacity-75 leading-relaxed line-clamp-2">${n.body}</p>
+                </div>
+            `).join('');
+
+            refreshAdminTables();
+        }
+
+        function refreshAdminTables() {
+            const db = getStorage();
+            document.getElementById('tbl-games').innerHTML = (db.games || []).map(g => `
+                <div class="glass-panel p-3 rounded-xl flex justify-between items-center text-xs">
+                    <span class="font-bold">${g.title}</span>
+                    <button class="bg-red-500/20 text-red-400 px-3 py-1 rounded-lg font-bold" onclick="deleteItem('games', ${g.id})">حذف 🗑️</button>
+                </div>
+            `).join('') || '<p class="text-xs opacity-75">خالی</p>';
+
+            document.getElementById('tbl-servers').innerHTML = (db.servers || []).map(s => `
+                <div class="glass-panel p-3 rounded-xl flex justify-between items-center text-xs">
+                    <span class="font-bold">${s.name}</span>
+                    <button class="bg-red-500/20 text-red-400 px-3 py-1 rounded-lg font-bold" onclick="deleteItem('servers', ${s.id})">حذف 🗑️</button>
+                </div>
+            `).join('') || '<p class="text-xs opacity-75">خالی</p>';
+
+            document.getElementById('tbl-tutorials').innerHTML = (db.tutorials || []).map(t => `
+                <div class="glass-panel p-3 rounded-xl flex justify-between items-center text-xs">
+                    <span class="font-bold">${t.title}</span>
+                    <button class="bg-red-500/20 text-red-400 px-3 py-1 rounded-lg font-bold" onclick="deleteItem('tutorials', ${t.id})">حذف 🗑️</button>
+                </div>
+            `).join('') || '<p class="text-xs opacity-75">خالی</p>';
+
+            document.getElementById('tbl-news').innerHTML = (db.news || []).map(n => `
+                <div class="glass-panel p-3 rounded-xl flex justify-between items-center text-xs">
+                    <span class="font-bold">${n.title}</span>
+                    <button class="bg-red-500/20 text-red-400 px-3 py-1 rounded-lg font-bold" onclick="deleteItem('news', ${n.id})">حذف 🗑️</button>
+                </div>
+            `).join('') || '<p class="text-xs opacity-75">خالی</p>';
+        }
+
+        // HANDLERS FOR FILE PREVIEWS AND DASHBOARD ADD/DELETE
+        function handleImgPreview(input, imgId, type) {
+            const f = input.files[0];
+            if (f) {
+                const r = new FileReader();
+                r.onload = e => {
+                    document.getElementById(imgId).src = e.target.result;
+                    document.getElementById(imgId).classList.remove('hidden');
+                    if (type === 'game') gameImageBase64 = e.target.result;
+                    if (type === 'news') newsImageBase64 = e.target.result;
+                };
+                r.readAsDataURL(f);
+            }
+        }
+
+        function handleVideoPreview(input, videoId) {
+            const f = input.files[0];
+            if (f) {
+                const r = new FileReader();
+                r.onload = e => {
+                    document.getElementById(videoId).src = e.target.result;
+                    document.getElementById(videoId).classList.remove('hidden');
+                    gameVideoBase64 = e.target.result;
+                };
+                r.readAsDataURL(f);
+            }
+        }
+
+        function handleTutorialVideoUpload(input) {
+            const f = input.files[0];
+            if (f) {
+                const r = new FileReader();
+                r.onload = e => {
+                    document.getElementById('t-video-prev').src = e.target.result;
+                    document.getElementById('t-video-prev').classList.remove('hidden');
+                    tutorialVideoBase64 = e.target.result;
+                };
+                r.readAsDataURL(f);
+            }
+        }
+
+        function addVersionRow() {
+            const c = document.getElementById('versions-input-list');
+            const div = document.createElement('div');
+            div.className = 'version-box bg-slate-900/80 border border-cardBorder p-4 rounded-xl space-y-3';
+            div.innerHTML = `
+                <div class="flex gap-2 items-center">
+                    <input type="text" class="ver-title w-full bg-slate-950 border border-cardBorder p-2.5 rounded-xl text-xs" placeholder="نام نسخه" required>
+                    <button type="button" onclick="this.closest('.version-box').remove()" class="bg-red-500/20 text-red-400 px-3 py-2 rounded-xl text-xs font-bold">حذف</button>
+                </div>
+                <div class="ver-parts-container space-y-2 pl-2 border-r-2 border-neonCyan/40">
+                    <div class="part-row flex gap-2">
+                        <input type="text" class="part-name w-1/3 bg-slate-950 border border-cardBorder p-2 rounded-xl text-xs" placeholder="عنوان پارت" required>
+                        <input type="url" class="part-link flex-grow bg-slate-950 border border-cardBorder p-2 rounded-xl text-xs" placeholder="لینک دانلود" required>
+                    </div>
+                </div>
+                <button type="button" onclick="addPartToVersion(this)" class="bg-cardBorder text-neonCyan px-3 py-1 rounded-lg text-xs font-bold">+ افزودن پارت</button>
+            `;
+            c.appendChild(div);
+        }
+
+        function addPartToVersion(btn) {
+            const c = btn.previousElementSibling;
+            const div = document.createElement('div');
+            div.className = 'part-row flex gap-2';
+            div.innerHTML = `
+                <input type="text" class="part-name w-1/3 bg-slate-950 border border-cardBorder p-2 rounded-xl text-xs" placeholder="عنوان پارت" required>
+                <input type="url" class="part-link flex-grow bg-slate-950 border border-cardBorder p-2 rounded-xl text-xs" placeholder="لینک دانلود" required>
+                <button type="button" onclick="this.parentElement.remove()" class="bg-red-500/20 text-red-400 px-2.5 py-1 rounded-lg text-xs">✕</button>
+            `;
+            c.appendChild(div);
+        }
+
+        document.getElementById('game-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const db = getStorage();
+            if (!db.games) db.games = [];
+
+            const versions = [];
+            document.querySelectorAll('#versions-input-list .version-box').forEach(box => {
+                const title = box.querySelector('.ver-title').value;
+                const parts = [];
+                box.querySelectorAll('.part-row').forEach(row => {
+                    const name = row.querySelector('.part-name').value;
+                    const link = row.querySelector('.part-link').value;
+                    if (name && link) parts.push({ name, link });
+                });
+                if (title && parts.length > 0) versions.push({ title, parts });
+            });
+
+            db.games.unshift({
+                id: Date.now(),
+                title: document.getElementById('g-title').value,
+                size: document.getElementById('g-size').value,
+                desc: document.getElementById('g-desc').value,
+                sysreq: document.getElementById('g-sysreq').value,
+                install: document.getElementById('g-install').value,
+                image: gameImageBase64,
+                video: gameVideoBase64,
+                versions: versions
+            });
+
+            setStorage(db);
+            this.reset();
+            document.getElementById('g-prev').classList.add('hidden');
+            document.getElementById('g-video-prev').classList.add('hidden');
+            gameImageBase64 = ""; gameVideoBase64 = "";
+            renderPortalContent();
+            showToast('بازی جدید با موفقیت ثبت شد!');
+        });
+
+        document.getElementById('server-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const db = getStorage();
+            if (!db.servers) db.servers = [];
+            db.servers.push({
+                id: Date.now(),
+                name: document.getElementById('s-name').value,
+                game: document.getElementById('s-game').value,
+                ip: document.getElementById('s-ip').value,
+                players: document.getElementById('s-players').value,
+                status: 'آنلاین'
+            });
+            setStorage(db);
+            this.reset();
+            renderPortalContent();
+            showToast('سرور جدید اضافه شد!');
+        });
+
+        document.getElementById('tutorial-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const db = getStorage();
+            if (!db.tutorials) db.tutorials = [];
+
+            const videoSrc = tutorialVideoBase64 || document.getElementById('t-video-link').value;
+
+            db.tutorials.unshift({
+                id: Date.now(),
+                title: document.getElementById('t-title').value,
+                video: videoSrc,
+                desc: document.getElementById('t-desc').value
+            });
+            setStorage(db);
+            this.reset();
+            document.getElementById('t-video-prev').classList.add('hidden');
+            tutorialVideoBase64 = "";
+            renderPortalContent();
+            showToast('آموزش جدید منتشر شد!');
+        });
+
+        document.getElementById('news-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const db = getStorage();
+            if (!db.news) db.news = [];
+            db.news.unshift({
+                id: Date.now(),
+                title: document.getElementById('n-title').value,
+                body: document.getElementById('n-body').value,
+                image: newsImageBase64
+            });
+            setStorage(db);
+            this.reset();
+            document.getElementById('n-prev').classList.add('hidden');
+            newsImageBase64 = "";
+            renderPortalContent();
+            showToast('خبر جدید منتشر شد!');
+        });
+
+        function deleteItem(type, id) {
+            if (confirm('آیا از حذف مطمئن هستید؟')) {
+                const db = getStorage();
+                db[type] = db[type].filter(x => x.id !== id);
+                setStorage(db);
+                renderPortalContent();
+                showToast('آیتم مورد نظر حذف گردید.');
+            }
+        }
+
+        function openGameDetails(id) {
+            const db = getStorage();
+            const g = db.games.find(x => x.id === id);
+            if (!g) return;
+
+            const vers = (g.versions || []).map(v => `
+                <div class="glass-panel p-5 rounded-2xl space-y-3 border border-cardBorder">
+                    <h4 class="font-bold text-neonPurple text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-box-open"></i> ${v.title}
+                    </h4>
+                    <div class="space-y-2">
+                        ${v.parts.map(p => `
+                            <a href="${p.link}" target="_blank" class="bg-slate-900/80 border border-cardBorder p-3 rounded-xl flex justify-between items-center hover:border-neonCyan transition">
+                                <span class="text-xs">📥 ${p.name}</span>
+                                <span class="bg-neonCyan text-black px-3 py-1 rounded-lg text-xs font-bold">لینک دانلود</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('') || '<p class="text-xs opacity-75">نسخه‌ای ثبت نشده است.</p>';
+
+            document.getElementById('game-detail-wrapper').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <div class="rounded-2xl overflow-hidden border border-cardBorder h-56 bg-slate-900">
+                        <img src="${g.image || 'https://via.placeholder.com/400x300?text=Kingame'}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="md:col-span-2 space-y-3">
+                        <span class="bg-neonCyan/20 text-neonCyan border border-neonCyan/40 px-3 py-1 rounded-lg text-xs font-bold">حجم: ${g.size}</span>
+                        <h1 class="text-2xl font-black">${g.title}</h1>
+                        <p class="text-xs opacity-80 leading-relaxed">${g.desc}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-panel p-4 rounded-2xl space-y-1"><h3 class="font-bold text-neonCyan text-xs">💻 سیستم مورد نیاز:</h3><p class="text-xs opacity-80 whitespace-pre-line">${g.sysreq}</p></div>
+                    <div class="glass-panel p-4 rounded-2xl space-y-1"><h3 class="font-bold text-neonPurple text-xs">🛠️ راهنمای نصب:</h3><p class="text-xs opacity-80 whitespace-pre-line">${g.install}</p></div>
+                </div>
+                <div class="space-y-3 pt-2">
+                    <h3 class="font-bold text-base text-neonCyan border-r-4 border-neonCyan pr-3">📥 نسخه‌ها و پارت‌های دانلود</h3>
+                    <div class="space-y-3">${vers}</div>
+                </div>
+            `;
+            switchView('game-details');
+        }
+
+        function openTutorialDetails(id) {
+            const db = getStorage();
+            const t = db.tutorials.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('tutorial-detail-wrapper').innerHTML = `
+                <h1 class="text-2xl font-black text-neonCyan">${t.title}</h1>
+                <div class="aspect-video bg-black rounded-2xl overflow-hidden border border-cardBorder">
+                    <video controls class="w-full h-full object-contain"><source src="${t.video}"></video>
+                </div>
+                <p class="text-xs opacity-80 leading-relaxed">${t.desc}</p>
+            `;
+            switchView('tutorial-details');
+        }
+
+        function openNewsDetails(id) {
+            const db = getStorage();
+            const n = db.news.find(x => x.id === id);
+            if (!n) return;
+            document.getElementById('news-detail-wrapper').innerHTML = `
+                <h1 class="text-2xl font-black text-neonCyan">${n.title}</h1>
+                ${n.image ? `<img src="${n.image}" class="rounded-2xl max-h-72 object-cover border border-cardBorder">` : ''}
+                <p class="text-xs opacity-80 leading-relaxed whitespace-pre-line">${n.body}</p>
+            `;
+            switchView('news-details');
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = text;
+            toast.classList.remove('opacity-0', '-translate-y-10', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-10', 'pointer-events-none');
+            }, 3000);
+        }
+
+        function toggleQuality() {
+            isHighQuality = !isHighQuality;
+            document.getElementById('quality-label').innerText = isHighQuality ? "کیفیت: بالا" : "کیفیت: معمولی";
+            renderer.setPixelRatio(isHighQuality ? Math.min(window.devicePixelRatio, 2) : 1);
+            showToast(isHighQuality ? "تنظیمات گرافیک روی حداکثر قرار گرفت" : "حالت بهینه‌سازی فعال شد");
+        }
+
+        window.onload = () => {
+            init3DTunnel();
+            renderPortalContent();
+        };
+    </script>
+</body>
+</html>
